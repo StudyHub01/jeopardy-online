@@ -195,13 +195,44 @@
     .host-only.visible { display: flex; }
     .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-    /* ── Waiting for host ── */
-    .waiting-host { color: #adc4ff; font-size: 1rem; letter-spacing: 1px; opacity: .8; }
-    .dot-anim::after {
-      content: '...';
-      animation: dots 1.5s steps(3,end) infinite;
-    }
+    /* ── Waiting ── */
+    .waiting-host { color: #adc4ff; font-size: 1rem; letter-spacing: 1px; opacity: .8; text-align:center; }
+    .dot-anim::after { content: '...'; animation: dots 1.5s steps(3,end) infinite; }
     @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+
+    /* ── VOTING ── */
+    .vote-disclaimer {
+      background: rgba(255,215,0,.08); border: 1px solid rgba(255,215,0,.3);
+      border-radius: 8px; padding: 8px 14px; margin-bottom: 14px;
+      font-size: .82rem; color: #FFD700; letter-spacing: .5px; text-align:center;
+    }
+    .vote-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 14px; }
+    .vote-btn {
+      font-family: 'Oswald', sans-serif; font-size: 1rem; font-weight: 700;
+      padding: 10px 28px; border-radius: 8px; border: 3px solid transparent;
+      cursor: pointer; transition: all .18s; letter-spacing: 1px;
+    }
+    .vote-btn.good  { background: rgba(34,197,94,.15); color: #22c55e; border-color: rgba(34,197,94,.4); }
+    .vote-btn.bad   { background: rgba(239,68,68,.15);  color: #ef4444; border-color: rgba(239,68,68,.4); }
+    .vote-btn.good:hover  { background: rgba(34,197,94,.3);  border-color: #22c55e; }
+    .vote-btn.bad:hover   { background: rgba(239,68,68,.3);  border-color: #ef4444; }
+    .vote-btn.selected.good { background: #22c55e; color: white; border-color: #22c55e; }
+    .vote-btn.selected.bad  { background: #ef4444; color: white; border-color: #ef4444; }
+    .vote-tally {
+      display: flex; justify-content: center; gap: 20px; margin-bottom: 14px;
+      font-size: .95rem; color: #adc4ff;
+    }
+    .tally-good { color: #22c55e; font-weight: 700; }
+    .tally-bad  { color: #ef4444; font-weight: 700; }
+    .vote-avatars { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .vote-avatar {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: .65rem; font-weight: 700;
+      border: 2px solid rgba(255,255,255,.2); transition: all .2s;
+    }
+    .vote-avatar.voted-good { border-color: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.5); }
+    .vote-avatar.voted-bad  { border-color: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,.5); }
+    .host-override { margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
     /* ══ WINNER SCREEN ══ */
     #winnerScreen { text-align: center; }
@@ -232,6 +263,7 @@
 <body>
 
 <canvas id="particleCanvas"></canvas>
+<audio id="easterAudio" src="/easter.mp3" preload="auto"></audio>
 
 <!-- ══ HOME ══ -->
 <div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">JoJo · Physique · Geometry Dash · Culture G</div></div>
@@ -298,9 +330,10 @@
     <!-- PHASE 1 : active player types their answer -->
     <div id="phaseAnswer" style="display:none">
       <input class="input-field" id="answerInput" placeholder="Ta réponse…" maxlength="120"
+        oninput="document.getElementById('submitAnswerBtn').disabled=!this.value.trim()"
         onkeydown="if(event.key==='Enter') doSubmitAnswer()" style="margin-bottom:10px">
       <div class="btn-row">
-        <button class="btn btn-gold" onclick="doSubmitAnswer()">📨 Soumettre ma réponse</button>
+        <button class="btn btn-gold" id="submitAnswerBtn" onclick="doSubmitAnswer()" disabled>📨 Soumettre ma réponse</button>
       </div>
     </div>
 
@@ -332,25 +365,31 @@
       <div id="mA"></div>
     </div>
 
-    <!-- PHASE 3 : host scores -->
-    <div class="btn-row" id="hostRow2" style="display:none">
-      <button class="btn btn-green" onclick="doScore(1)">✅ Bonne réponse</button>
-      <button class="btn btn-red"   onclick="doScore(-1)">❌ Mauvaise réponse</button>
-      <button class="btn btn-outline" onclick="doSkip()">Passer</button>
-    </div>
-
-    <!-- PHASE 3 : others wait for host to score -->
-    <div class="waiting-host" id="waitingScore" style="display:none">
-      Le host tranche<span class="dot-anim"></span>
+    <!-- PHASE 3 : voting section (everyone) -->
+    <div id="voteSection" style="display:none">
+      <div class="vote-disclaimer">⚖️ Votez objectivement — même si c'est votre pote !</div>
+      <div class="vote-avatars" id="voteAvatars"></div>
+      <div class="vote-tally" id="voteTally"></div>
+      <div class="vote-btns" id="voteBtns">
+        <button class="vote-btn good" onclick="doVote('good')">✅ Bonne</button>
+        <button class="vote-btn bad"  onclick="doVote('bad')">❌ Mauvaise</button>
+      </div>
+      <!-- Host override (visible only to host) -->
+      <div class="host-override" id="hostOverride" style="display:none">
+        <div style="font-size:.75rem;color:#adc4ff;width:100%;text-align:center;margin-bottom:4px;letter-spacing:1px">FORCER LE RÉSULTAT</div>
+        <button class="btn btn-green" style="font-size:.85rem;padding:7px 18px" onclick="doScore(1)">✅ Forcer bonne</button>
+        <button class="btn btn-red"   style="font-size:.85rem;padding:7px 18px" onclick="doScore(-1)">❌ Forcer mauvaise</button>
+        <button class="btn btn-outline" style="font-size:.85rem;padding:7px 18px" onclick="doSkip()">Passer</button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ══ RULES OVERLAY ══ -->
 <div class="overlay" id="rulesOverlay">
-  <div class="modal" style="max-width:600px">
-    <h2 style="color:#FFD700;font-size:1.7rem;letter-spacing:3px;margin-bottom:22px;text-align:center">📋 RÈGLES DU JEU</h2>
-    <div style="text-align:left;color:#d0daff;font-size:.93rem;line-height:1.75;font-weight:400">
+  <div class="modal" style="max-width:600px;padding:28px 32px;display:flex;flex-direction:column;max-height:90vh">
+    <h2 style="color:#FFD700;font-size:1.5rem;letter-spacing:3px;margin-bottom:16px;text-align:center;flex-shrink:0">📋 RÈGLES DU JEU</h2>
+    <div style="text-align:left;color:#d0daff;font-size:.88rem;line-height:1.7;font-weight:400;overflow-y:auto;flex:1;padding-right:6px;scrollbar-width:thin;scrollbar-color:#2a47d8 transparent">
 
       <p style="color:#FFD700;font-size:1rem;letter-spacing:1px;margin-bottom:6px">🎮 MISE EN PLACE</p>
       <p>Le premier à créer une salle devient le <strong style="color:white">HOST</strong> — c'est le présentateur de la partie. Les autres rejoignent via l'URL du jeu en entrant le <strong style="color:white">code à 5 lettres</strong>. Il peut y avoir de 2 à 6 joueurs. Le HOST lance la partie quand tout le monde est prêt.</p>
@@ -605,26 +644,27 @@ function openModal(col, row, playerIdx, state) {
 
 // Sets which phase of the modal is visible
 // phase: 'waiting-answer' | 'waiting-reveal' | 'revealed'
-function setModalPhase(phase, activeName, submittedAnswer) {
+function setModalPhase(phase, activeName, submittedAnswer, votesData) {
   document.getElementById('phaseAnswer').style.display    = 'none';
   document.getElementById('waitingAnswer').style.display  = 'none';
   document.getElementById('submittedBox').style.display   = 'none';
   document.getElementById('hostRow1').style.display       = 'none';
   document.getElementById('waitingReveal').style.display  = 'none';
   document.getElementById('mABox').classList.remove('show');
-  document.getElementById('hostRow2').style.display       = 'none';
-  document.getElementById('waitingScore').style.display   = 'none';
+  document.getElementById('voteSection').style.display    = 'none';
 
   if (phase === 'waiting-answer') {
     if (gameState && gameState.currentTurn === myIdx) {
       document.getElementById('phaseAnswer').style.display = 'block';
+      document.getElementById('submitAnswerBtn').disabled  = true;
+      document.getElementById('answerInput').value         = '';
     } else {
       document.getElementById('waitingAnswerName').textContent = activeName || '';
       document.getElementById('waitingAnswer').style.display = 'block';
     }
   } else if (phase === 'waiting-reveal') {
     if (submittedAnswer) {
-      document.getElementById('submittedText').textContent = submittedAnswer;
+      document.getElementById('submittedText').textContent  = submittedAnswer;
       document.getElementById('submittedBox').style.display = 'block';
     }
     if (amHost) {
@@ -634,20 +674,52 @@ function setModalPhase(phase, activeName, submittedAnswer) {
     }
   } else if (phase === 'revealed') {
     if (submittedAnswer) {
-      document.getElementById('submittedText').textContent = submittedAnswer;
+      document.getElementById('submittedText').textContent  = submittedAnswer;
       document.getElementById('submittedBox').style.display = 'block';
     }
     document.getElementById('mABox').classList.add('show');
-    if (amHost) {
-      document.getElementById('hostRow2').style.display = 'flex';
-    } else {
-      document.getElementById('waitingScore').style.display = 'block';
-    }
+    document.getElementById('voteSection').style.display = 'block';
+    document.getElementById('hostOverride').style.display = amHost ? 'flex' : 'none';
+    if (votesData) renderVotes(votesData);
   }
 }
 
+function renderVotes(votesData) {
+  if (!gameState) return;
+  const { votes, good, bad, total } = votesData;
+
+  // Avatars
+  const avatarBox = document.getElementById('voteAvatars');
+  avatarBox.innerHTML = '';
+  gameState.players.forEach((p, i) => {
+    const v = votes ? votes[i] : null;
+    const el = document.createElement('div');
+    el.className = 'vote-avatar' + (v === 'good' ? ' voted-good' : v === 'bad' ? ' voted-bad' : '');
+    el.style.background = p.color + '33';
+    el.style.borderColor = v ? (v === 'good' ? '#22c55e' : '#ef4444') : 'rgba(255,255,255,.2)';
+    el.textContent = p.name.charAt(0).toUpperCase();
+    el.title = p.name + (v ? (v === 'good' ? ' ✅' : ' ❌') : ' …');
+    avatarBox.appendChild(el);
+  });
+
+  // Tally
+  const g = good || 0, b = bad || 0, t = total || gameState.players.length;
+  document.getElementById('voteTally').innerHTML =
+    `<span class="tally-good">✅ ${g}</span> <span style="opacity:.4">vs</span> <span class="tally-bad">${b} ❌</span> <span style="opacity:.4">— ${g+b}/${t} votes</span>`;
+
+  // Highlight my vote
+  const myVote = votes ? votes[myIdx] : null;
+  document.querySelectorAll('.vote-btn').forEach(btn => {
+    btn.classList.remove('selected');
+    if ((btn.classList.contains('good') && myVote === 'good') ||
+        (btn.classList.contains('bad')  && myVote === 'bad')) {
+      btn.classList.add('selected');
+    }
+  });
+}
+
 function showAnswerInModal() {
-  setModalPhase('revealed', null, gameState?.submittedAnswer);
+  setModalPhase('revealed', null, gameState?.submittedAnswer, { votes: gameState?.votes || {}, good: 0, bad: 0, total: gameState?.players?.length || 0 });
 }
 
 function closeModal() {
@@ -661,6 +733,21 @@ function doSubmitAnswer() {
   if (!answer) return;
   socket.emit('submitAnswer', { answer });
 }
+
+// Vote on the answer
+function doVote(vote) {
+  socket.emit('submitVote', { vote });
+}
+
+/* ═══ EASTER EGG — W + C simultaneous ═══ */
+const keysDown = new Set();
+document.addEventListener('keydown', e => {
+  keysDown.add(e.key.toLowerCase());
+  if (keysDown.has('w') && keysDown.has('c')) {
+    socket.emit('playEasterEgg');
+  }
+});
+document.addEventListener('keyup', e => keysDown.delete(e.key.toLowerCase()));
 
 // Host actions
 function doReveal() { socket.emit('revealAnswer'); }
@@ -764,8 +851,20 @@ socket.on('answerSubmitted', ({ answer, state }) => {
   setModalPhase('waiting-reveal', null, answer);
 });
 
-socket.on('answerRevealed', () => {
+socket.on('answerRevealed', ({ state }) => {
+  if (state) gameState = state;
   showAnswerInModal();
+});
+
+socket.on('votesUpdated', ({ votes, good, bad, total, state }) => {
+  if (state) gameState = state;
+  renderVotes({ votes, good, bad, total });
+});
+
+socket.on('playEasterEgg', () => {
+  const audio = document.getElementById('easterAudio');
+  audio.currentTime = 0;
+  audio.play().catch(() => {});
 });
 
 // Score popup on state update (detect score change)

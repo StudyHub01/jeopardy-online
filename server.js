@@ -26,13 +26,14 @@ function genCode() {
 function newRoom() {
   return {
     players:         [],
-    usedCells:       {},      // "col,row" → true
+    usedCells:       {},
     currentTurn:     0,
     lastAction:      null,
-    phase:           'lobby', // lobby | playing | finished
-    activeCell:      null,    // { col, row } when question is open
+    phase:           'lobby',
+    activeCell:      null,
     answerShown:     false,
-    submittedAnswer: null,    // text typed by the active player
+    submittedAnswer: null,
+    votes:           {},   // { playerIdx: 'good' | 'bad' }
   };
 }
 
@@ -49,7 +50,44 @@ function roomState(code) {
     activeCell:      r.activeCell,
     answerShown:     r.answerShown,
     submittedAnswer: r.submittedAnswer,
+    votes:           r.votes,
   };
+}
+
+// ── Helpers: apply score / skip ──
+function applyScore(room, code, sign) {
+  const { col, row } = room.activeCell;
+  const key   = `${col},${row}`;
+  const val   = VALUES[row];
+  const delta = sign * val;
+
+  room.lastAction      = { key, col, row, playerIdx: room.currentTurn, delta, prevTurn: room.currentTurn };
+  room.players[room.currentTurn].score += delta;
+  room.usedCells[key]  = true;
+  room.activeCell      = null;
+  room.answerShown     = false;
+  room.submittedAnswer = null;
+  room.votes           = {};
+  room.currentTurn     = (room.currentTurn + 1) % room.players.length;
+
+  if (Object.keys(room.usedCells).length >= TOTAL) room.phase = 'finished';
+  io.to(code).emit('state', roomState(code));
+}
+
+function applySkip(room, code) {
+  const { col, row } = room.activeCell;
+  const key = `${col},${row}`;
+
+  room.lastAction      = { key, col, row, playerIdx: room.currentTurn, delta: 0, prevTurn: room.currentTurn };
+  room.usedCells[key]  = true;
+  room.activeCell      = null;
+  room.answerShown     = false;
+  room.submittedAnswer = null;
+  room.votes           = {};
+  room.currentTurn     = (room.currentTurn + 1) % room.players.length;
+
+  if (Object.keys(room.usedCells).length >= TOTAL) room.phase = 'finished';
+  io.to(code).emit('state', roomState(code));
 }
 
 // ── Socket logic ──
@@ -57,159 +95,140 @@ io.on('connection', (socket) => {
   let myRoom = null;
   let myIdx  = -1;
 
-  // Create a new room
   socket.on('createRoom', ({ name }, cb) => {
     const code = genCode();
     rooms[code] = newRoom();
     const player = { id: socket.id, name: name || 'Hôte', color: COLORS[0], score: 0, isHost: true };
     rooms[code].players.push(player);
-    myRoom = code;
-    myIdx  = 0;
+    myRoom = code; myIdx = 0;
     socket.join(code);
     cb({ ok: true, code, myIdx: 0 });
     io.to(code).emit('state', roomState(code));
   });
 
-  // Join existing room
   socket.on('joinRoom', ({ code, name }, cb) => {
     const room = rooms[code];
-    if (!room)                   return cb({ error: 'Salle introuvable' });
-    if (room.phase !== 'lobby')  return cb({ error: 'Partie déjà en cours' });
+    if (!room)                    return cb({ error: 'Salle introuvable' });
+    if (room.phase !== 'lobby')   return cb({ error: 'Partie déjà en cours' });
     if (room.players.length >= 6) return cb({ error: 'Salle pleine (max 6)' });
 
     const idx    = room.players.length;
     const player = { id: socket.id, name: name || `Joueur ${idx + 1}`, color: COLORS[idx], score: 0, isHost: false };
     room.players.push(player);
-    myRoom = code;
-    myIdx  = idx;
+    myRoom = code; myIdx = idx;
     socket.join(code);
     cb({ ok: true, code, myIdx: idx });
     io.to(code).emit('state', roomState(code));
   });
 
-  // Host starts the game
   socket.on('startGame', () => {
     const room = rooms[myRoom];
-    if (!room || room.phase !== 'lobby') return;
-    if (!room.players[myIdx]?.isHost)    return;
-    if (room.players.length < 1)         return;
-    room.phase       = 'playing';
-    room.currentTurn = 0;
+    if (!room || room.phase !== 'lobby')  return;
+    if (!room.players[myIdx]?.isHost)     return;
+    room.phase = 'playing'; room.currentTurn = 0;
     io.to(myRoom).emit('state', roomState(myRoom));
   });
 
-  // Player selects a cell — only the active player can do this
+  // Only active player can select
   socket.on('selectCell', ({ col, row }) => {
     const room = rooms[myRoom];
     if (!room || room.phase !== 'playing') return;
     if (room.activeCell) return;
-    const key = `${col},${row}`;
-    if (room.usedCells[key]) return;
-    if (room.currentTurn !== myIdx) return; // strictly the active player only
+    if (room.usedCells[`${col},${row}`])   return;
+    if (room.currentTurn !== myIdx)         return;
 
     room.activeCell      = { col, row };
     room.answerShown     = false;
     room.submittedAnswer = null;
+    room.votes           = {};
     io.to(myRoom).emit('cellOpened', { col, row, playerIdx: room.currentTurn, state: roomState(myRoom) });
   });
 
-  // Active player submits their typed answer
+  // Active player submits typed answer
   socket.on('submitAnswer', ({ answer }) => {
     const room = rooms[myRoom];
-    if (!room || !room.activeCell)      return;
-    if (room.currentTurn !== myIdx)     return; // only the active player
+    if (!room || !room.activeCell)  return;
+    if (room.currentTurn !== myIdx) return;
     room.submittedAnswer = answer.trim() || '…';
     io.to(myRoom).emit('answerSubmitted', { answer: room.submittedAnswer, state: roomState(myRoom) });
   });
 
-  // Host reveals the correct answer
+  // Host reveals correct answer → voting phase begins
   socket.on('revealAnswer', () => {
     const room = rooms[myRoom];
-    if (!room || !room.activeCell)      return;
-    if (!room.players[myIdx]?.isHost)   return;
+    if (!room || !room.activeCell)    return;
+    if (!room.players[myIdx]?.isHost) return;
     room.answerShown = true;
-    io.to(myRoom).emit('answerRevealed');
+    room.votes       = {};
+    io.to(myRoom).emit('answerRevealed', { state: roomState(myRoom) });
   });
 
-  // Host scores the answer (+1 good / -1 bad)
+  // Any player submits a vote
+  socket.on('submitVote', ({ vote }) => {
+    const room = rooms[myRoom];
+    if (!room || !room.activeCell || !room.answerShown) return;
+    room.votes[myIdx] = vote; // 'good' | 'bad'
+
+    const total    = room.players.length;
+    const votesCast = Object.keys(room.votes).length;
+    const good     = Object.values(room.votes).filter(v => v === 'good').length;
+    const bad      = Object.values(room.votes).filter(v => v === 'bad').length;
+
+    io.to(myRoom).emit('votesUpdated', { votes: room.votes, good, bad, total, state: roomState(myRoom) });
+
+    // Auto-resolve when everyone has voted and no tie
+    if (votesCast >= total && good !== bad) {
+      applyScore(room, myRoom, good > bad ? 1 : -1);
+    }
+    // Tie or waiting for remaining votes → host can still force
+  });
+
+  // Host forces score (override or break tie)
   socket.on('scoreAnswer', ({ sign }) => {
     const room = rooms[myRoom];
     if (!room || !room.activeCell)    return;
     if (!room.players[myIdx]?.isHost) return;
-
-    const { col, row } = room.activeCell;
-    const key   = `${col},${row}`;
-    const val   = VALUES[row];
-    const delta = sign * val;
-
-    room.lastAction = { key, col, row, playerIdx: room.currentTurn, delta, prevTurn: room.currentTurn };
-    room.players[room.currentTurn].score += delta;
-    room.usedCells[key]      = true;
-    room.activeCell          = null;
-    room.answerShown         = false;
-    room.submittedAnswer     = null;
-    room.currentTurn         = (room.currentTurn + 1) % room.players.length;
-
-    if (Object.keys(room.usedCells).length >= TOTAL) {
-      room.phase = 'finished';
-    }
-    io.to(myRoom).emit('state', roomState(myRoom));
+    applyScore(room, myRoom, sign);
   });
 
-  // Host skips (no score)
+  // Host skips
   socket.on('skipAnswer', () => {
     const room = rooms[myRoom];
     if (!room || !room.activeCell)    return;
     if (!room.players[myIdx]?.isHost) return;
-
-    const { col, row } = room.activeCell;
-    const key = `${col},${row}`;
-
-    room.lastAction      = { key, col, row, playerIdx: room.currentTurn, delta: 0, prevTurn: room.currentTurn };
-    room.usedCells[key]  = true;
-    room.activeCell      = null;
-    room.answerShown     = false;
-    room.submittedAnswer = null;
-    room.currentTurn     = (room.currentTurn + 1) % room.players.length;
-
-    if (Object.keys(room.usedCells).length >= TOTAL) {
-      room.phase = 'finished';
-    }
-    io.to(myRoom).emit('state', roomState(myRoom));
+    applySkip(room, myRoom);
   });
 
-  // Host undoes last action
+  // Host undoes
   socket.on('undoLast', () => {
     const room = rooms[myRoom];
     if (!room || !room.lastAction)    return;
     if (!room.players[myIdx]?.isHost) return;
-
     const { key, playerIdx: pIdx, delta, prevTurn } = room.lastAction;
     room.players[pIdx].score -= delta;
     delete room.usedCells[key];
     room.currentTurn = prevTurn;
     room.lastAction  = null;
     room.activeCell  = null;
+    room.votes       = {};
     if (room.phase === 'finished') room.phase = 'playing';
     io.to(myRoom).emit('state', roomState(myRoom));
   });
 
-  // Disconnect
+  // Easter egg — broadcast to whole room
+  socket.on('playEasterEgg', () => {
+    if (!myRoom) return;
+    io.to(myRoom).emit('playEasterEgg');
+  });
+
   socket.on('disconnect', () => {
     if (!myRoom || !rooms[myRoom]) return;
     const room = rooms[myRoom];
-    if (myIdx >= 0 && room.players[myIdx]) {
-      room.players[myIdx].name += ' ✕';
-    }
+    if (myIdx >= 0 && room.players[myIdx]) room.players[myIdx].name += ' ✕';
     io.to(myRoom).emit('state', roomState(myRoom));
-    // Clean empty rooms
-    if (room.players.every(p => p.name.endsWith(' ✕'))) {
-      delete rooms[myRoom];
-    }
+    if (room.players.every(p => p.name.endsWith(' ✕'))) delete rooms[myRoom];
   });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🎯 Jeopardy! en ligne → http://localhost:${PORT}`);
-});
+server.listen(PORT, () => console.log(`🎯 Jeopardy! → http://localhost:${PORT}`));
