@@ -294,42 +294,93 @@
     <div class="modal-cat" id="mCat"></div>
     <div class="modal-val" id="mVal"></div>
     <div class="modal-q"   id="mQ"></div>
-    <div class="modal-answer-box" id="mABox">
-      <div class="modal-answer-label">Réponse</div>
-      <div id="mA"></div>
+
+    <!-- PHASE 1 : active player types their answer -->
+    <div id="phaseAnswer" style="display:none">
+      <input class="input-field" id="answerInput" placeholder="Ta réponse…" maxlength="120"
+        onkeydown="if(event.key==='Enter') doSubmitAnswer()" style="margin-bottom:10px">
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="doSubmitAnswer()">📨 Soumettre ma réponse</button>
+      </div>
     </div>
-    <!-- Shown to host before reveal -->
-    <div class="btn-row host-only" id="hostRow1">
-      <button class="btn btn-gold" onclick="doReveal()">🔍 Révéler la réponse</button>
+
+    <!-- PHASE 1 : others wait for active player -->
+    <div class="waiting-host" id="waitingAnswer" style="display:none">
+      <span id="waitingAnswerName"></span> formule sa réponse<span class="dot-anim"></span>
+    </div>
+
+    <!-- PHASE 2 : submitted answer visible to all -->
+    <div id="submittedBox" style="display:none">
+      <div class="modal-answer-label" style="color:#adc4ff;font-size:.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px">Réponse soumise</div>
+      <div id="submittedText" style="background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:10px;padding:14px 18px;font-size:1.2rem;color:white;font-weight:700;margin-bottom:18px;"></div>
+    </div>
+
+    <!-- PHASE 2 : host reveals correct answer -->
+    <div class="btn-row" id="hostRow1" style="display:none">
+      <button class="btn btn-gold" onclick="doReveal()">🔍 Révéler la bonne réponse</button>
       <button class="btn btn-outline" onclick="doSkip()">Passer</button>
     </div>
-    <!-- Shown to host after reveal -->
-    <div class="btn-row host-only" id="hostRow2" style="display:none">
+
+    <!-- PHASE 2 : others wait for host to reveal -->
+    <div class="waiting-host" id="waitingReveal" style="display:none">
+      En attente de la révélation<span class="dot-anim"></span>
+    </div>
+
+    <!-- PHASE 3 : correct answer shown -->
+    <div class="modal-answer-box" id="mABox">
+      <div class="modal-answer-label">Bonne réponse</div>
+      <div id="mA"></div>
+    </div>
+
+    <!-- PHASE 3 : host scores -->
+    <div class="btn-row" id="hostRow2" style="display:none">
       <button class="btn btn-green" onclick="doScore(1)">✅ Bonne réponse</button>
       <button class="btn btn-red"   onclick="doScore(-1)">❌ Mauvaise réponse</button>
       <button class="btn btn-outline" onclick="doSkip()">Passer</button>
     </div>
-    <!-- Shown to non-host -->
-    <div class="waiting-host" id="guestWait" style="display:none">
-      Le host juge la réponse<span class="dot-anim"></span>
+
+    <!-- PHASE 3 : others wait for host to score -->
+    <div class="waiting-host" id="waitingScore" style="display:none">
+      Le host tranche<span class="dot-anim"></span>
     </div>
   </div>
 </div>
 
 <!-- ══ RULES OVERLAY ══ -->
 <div class="overlay" id="rulesOverlay">
-  <div class="modal" style="max-width:560px">
-    <h2 style="color:#FFD700;font-size:1.6rem;letter-spacing:3px;margin-bottom:20px">📋 RÈGLES</h2>
-    <div style="text-align:left;color:#d0daff;font-size:.95rem;line-height:1.7;font-weight:400">
-      <p><strong style="color:#FFD700">Mise en place :</strong> Le créateur de la salle est le <strong>HOST</strong>. Il gère la révélation des réponses et les scores. Les autres joueurs rejoignent avec le code.</p>
-      <br>
-      <p><strong style="color:#FFD700">À ton tour :</strong> Clique une case sur le plateau. La question s'affiche pour tout le monde. Répondez à voix haute (Discord, téléphone…).</p>
-      <br>
-      <p><strong style="color:#FFD700">Scores :</strong> ✅ Bonne réponse = +points · ❌ Mauvaise = −points · Passer = 0</p>
-      <br>
-      <p><strong style="color:#FFD700">Note :</strong> Seul le HOST peut révéler la réponse et valider. Le bouton ↩ Annuler permet de défaire la dernière action.</p>
+  <div class="modal" style="max-width:600px">
+    <h2 style="color:#FFD700;font-size:1.7rem;letter-spacing:3px;margin-bottom:22px;text-align:center">📋 RÈGLES DU JEU</h2>
+    <div style="text-align:left;color:#d0daff;font-size:.93rem;line-height:1.75;font-weight:400">
+
+      <p style="color:#FFD700;font-size:1rem;letter-spacing:1px;margin-bottom:6px">🎮 MISE EN PLACE</p>
+      <p>Le premier à créer une salle devient le <strong style="color:white">HOST</strong> — c'est le présentateur de la partie. Les autres rejoignent via l'URL du jeu en entrant le <strong style="color:white">code à 5 lettres</strong>. Il peut y avoir de 2 à 6 joueurs. Le HOST lance la partie quand tout le monde est prêt.</p>
+
+      <div style="height:1px;background:rgba(255,255,255,.1);margin:14px 0"></div>
+
+      <p style="color:#FFD700;font-size:1rem;letter-spacing:1px;margin-bottom:6px">🎯 DÉROULEMENT D'UN TOUR</p>
+      <p><strong style="color:white">1.</strong> Le joueur actif (mis en évidence) choisit une case sur le plateau — une catégorie et une valeur de <strong style="color:white">200 $ à 1 000 $</strong>. Seul ce joueur peut cliquer.</p>
+      <p style="margin-top:6px"><strong style="color:white">2.</strong> La question s'affiche pour tout le monde. Le joueur actif <strong style="color:white">tape sa réponse</strong> dans le champ prévu et la soumet — tout le monde voit ce qu'il a écrit.</p>
+      <p style="margin-top:6px"><strong style="color:white">3.</strong> Le HOST clique <strong style="color:white">Révéler la bonne réponse</strong>. Le groupe débat si la réponse soumise est acceptable.</p>
+      <p style="margin-top:6px"><strong style="color:white">4.</strong> Le HOST tranche : <strong style="color:#22c55e">✅ Bonne</strong> ou <strong style="color:#ef4444">❌ Mauvaise</strong>. Le tour passe au joueur suivant.</p>
+
+      <div style="height:1px;background:rgba(255,255,255,.1);margin:14px 0"></div>
+
+      <p style="color:#FFD700;font-size:1rem;letter-spacing:1px;margin-bottom:6px">💰 SCORES</p>
+      <p>✅ <strong style="color:white">Bonne réponse</strong> → le joueur gagne la valeur de la case (ex. +600 $).</p>
+      <p style="margin-top:4px">❌ <strong style="color:white">Mauvaise réponse</strong> → la valeur est déduite de son score (ex. −600 $).</p>
+      <p style="margin-top:4px">⏭ <strong style="color:white">Passer</strong> → aucun point gagné ni perdu, la case est retirée.</p>
+      <p style="margin-top:4px">↩ <strong style="color:white">Annuler</strong> → le HOST peut défaire la dernière action si une erreur a été faite.</p>
+
+      <div style="height:1px;background:rgba(255,255,255,.1);margin:14px 0"></div>
+
+      <p style="color:#FFD700;font-size:1rem;letter-spacing:1px;margin-bottom:6px">🏆 FIN DE PARTIE</p>
+      <p>Quand toutes les cases ont été jouées, le classement final s'affiche avec podium. Le joueur avec le score le plus élevé remporte la partie. En cas d'égalité, les joueurs concernés sont co-champions !</p>
+
+      <div style="height:1px;background:rgba(255,255,255,.1);margin:14px 0"></div>
+
+      <p style="color:#adc4ff;font-size:.83rem">💡 <em>Conseil : jouez avec un appel vocal en parallèle (Discord, FaceTime…) pour débattre des réponses en temps réel !</em></p>
     </div>
-    <button class="btn btn-gold" style="margin-top:24px" onclick="toggleRules()">Fermer</button>
+    <button class="btn btn-gold" style="margin-top:24px;display:block;margin-left:auto;margin-right:auto" onclick="toggleRules()">Fermer</button>
   </div>
 </div>
 
@@ -515,7 +566,7 @@ function renderGame(state) {
       const cell = document.createElement('div');
       const key  = `${col},${row}`;
       const used = state.usedCells[key];
-      const canClick = !used && (state.currentTurn === myIdx || amHost) && !state.activeCell;
+      const canClick = !used && state.currentTurn === myIdx && !state.activeCell;
       cell.className = 'cell' + (used ? ' used' : '') + (canClick ? ' clickable' : '');
       if (!used) cell.textContent = `$${val}`;
       if (canClick) cell.onclick = () => socket.emit('selectCell', { col, row });
@@ -534,34 +585,81 @@ function renderGame(state) {
 ════════════════════════════════════════ */
 function openModal(col, row, playerIdx, state) {
   openCell = { col, row };
-  const p = state.players[playerIdx];
-  document.getElementById('mTurnName').textContent = p.name + (playerIdx === myIdx ? ' (toi)' : '');
+  const p        = state.players[playerIdx];
+  const isActive = playerIdx === myIdx;
+
+  document.getElementById('mTurnName').textContent = p.name + (isActive ? ' (toi)' : '');
   document.getElementById('mTurnName').style.color = p.color;
   document.getElementById('mCat').textContent = CATEGORIES[col];
   document.getElementById('mVal').textContent  = `$${VALUES[row]}`;
   document.getElementById('mQ').textContent    = QA[col][row].q;
   document.getElementById('mA').textContent    = QA[col][row].a;
   document.getElementById('mABox').classList.remove('show');
+  document.getElementById('answerInput').value = '';
 
-  // Host controls
-  document.querySelectorAll('.host-only').forEach(el => el.classList.toggle('visible', amHost));
-  document.getElementById('hostRow1').style.display = amHost ? 'flex' : 'none';
-  document.getElementById('hostRow2').style.display = 'none';
-  document.getElementById('guestWait').style.display = amHost ? 'none' : 'block';
-
+  // Phase 1 — waiting for active player to type
+  setModalPhase('waiting-answer', p.name, state.submittedAnswer);
   document.getElementById('overlay').classList.add('open');
+  if (isActive) document.getElementById('answerInput').focus();
+}
+
+// Sets which phase of the modal is visible
+// phase: 'waiting-answer' | 'waiting-reveal' | 'revealed'
+function setModalPhase(phase, activeName, submittedAnswer) {
+  document.getElementById('phaseAnswer').style.display    = 'none';
+  document.getElementById('waitingAnswer').style.display  = 'none';
+  document.getElementById('submittedBox').style.display   = 'none';
+  document.getElementById('hostRow1').style.display       = 'none';
+  document.getElementById('waitingReveal').style.display  = 'none';
+  document.getElementById('mABox').classList.remove('show');
+  document.getElementById('hostRow2').style.display       = 'none';
+  document.getElementById('waitingScore').style.display   = 'none';
+
+  if (phase === 'waiting-answer') {
+    if (gameState && gameState.currentTurn === myIdx) {
+      document.getElementById('phaseAnswer').style.display = 'block';
+    } else {
+      document.getElementById('waitingAnswerName').textContent = activeName || '';
+      document.getElementById('waitingAnswer').style.display = 'block';
+    }
+  } else if (phase === 'waiting-reveal') {
+    if (submittedAnswer) {
+      document.getElementById('submittedText').textContent = submittedAnswer;
+      document.getElementById('submittedBox').style.display = 'block';
+    }
+    if (amHost) {
+      document.getElementById('hostRow1').style.display = 'flex';
+    } else {
+      document.getElementById('waitingReveal').style.display = 'block';
+    }
+  } else if (phase === 'revealed') {
+    if (submittedAnswer) {
+      document.getElementById('submittedText').textContent = submittedAnswer;
+      document.getElementById('submittedBox').style.display = 'block';
+    }
+    document.getElementById('mABox').classList.add('show');
+    if (amHost) {
+      document.getElementById('hostRow2').style.display = 'flex';
+    } else {
+      document.getElementById('waitingScore').style.display = 'block';
+    }
+  }
 }
 
 function showAnswerInModal() {
-  document.getElementById('mABox').classList.add('show');
-  document.getElementById('hostRow1').style.display = 'none';
-  document.getElementById('hostRow2').style.display = amHost ? 'flex' : 'none';
-  document.getElementById('guestWait').style.display = 'none';
+  setModalPhase('revealed', null, gameState?.submittedAnswer);
 }
 
 function closeModal() {
   document.getElementById('overlay').classList.remove('open');
   openCell = null;
+}
+
+// Active player submits their typed answer
+function doSubmitAnswer() {
+  const answer = document.getElementById('answerInput').value.trim();
+  if (!answer) return;
+  socket.emit('submitAnswer', { answer });
 }
 
 // Host actions
@@ -659,6 +757,11 @@ socket.on('cellOpened', ({ col, row, playerIdx, state }) => {
   renderGame(state);
   openModal(col, row, playerIdx, state);
   document.getElementById('myTurnBanner').style.display = 'none';
+});
+
+socket.on('answerSubmitted', ({ answer, state }) => {
+  gameState = state;
+  setModalPhase('waiting-reveal', null, answer);
 });
 
 socket.on('answerRevealed', () => {

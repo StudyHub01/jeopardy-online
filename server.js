@@ -25,13 +25,14 @@ function genCode() {
 
 function newRoom() {
   return {
-    players:     [],
-    usedCells:   {},      // "col,row" → true
-    currentTurn: 0,
-    lastAction:  null,
-    phase:       'lobby', // lobby | playing | finished
-    activeCell:  null,    // { col, row } when question is open
-    answerShown: false,
+    players:         [],
+    usedCells:       {},      // "col,row" → true
+    currentTurn:     0,
+    lastAction:      null,
+    phase:           'lobby', // lobby | playing | finished
+    activeCell:      null,    // { col, row } when question is open
+    answerShown:     false,
+    submittedAnswer: null,    // text typed by the active player
   };
 }
 
@@ -40,13 +41,14 @@ function roomState(code) {
   if (!r) return null;
   return {
     code,
-    players:     r.players.map(p => ({ name: p.name, color: p.color, score: p.score, isHost: p.isHost })),
-    usedCells:   r.usedCells,
-    currentTurn: r.currentTurn,
-    hasUndo:     !!r.lastAction,
-    phase:       r.phase,
-    activeCell:  r.activeCell,
-    answerShown: r.answerShown,
+    players:         r.players.map(p => ({ name: p.name, color: p.color, score: p.score, isHost: p.isHost })),
+    usedCells:       r.usedCells,
+    currentTurn:     r.currentTurn,
+    hasUndo:         !!r.lastAction,
+    phase:           r.phase,
+    activeCell:      r.activeCell,
+    answerShown:     r.answerShown,
+    submittedAnswer: r.submittedAnswer,
   };
 }
 
@@ -96,25 +98,31 @@ io.on('connection', (socket) => {
     io.to(myRoom).emit('state', roomState(myRoom));
   });
 
-  // Player selects a cell
+  // Player selects a cell — only the active player can do this
   socket.on('selectCell', ({ col, row }) => {
     const room = rooms[myRoom];
     if (!room || room.phase !== 'playing') return;
-    if (room.activeCell) return; // already open
-
-    const key      = `${col},${row}`;
+    if (room.activeCell) return;
+    const key = `${col},${row}`;
     if (room.usedCells[key]) return;
+    if (room.currentTurn !== myIdx) return; // strictly the active player only
 
-    const isHost   = room.players[myIdx]?.isHost;
-    const isMyTurn = room.currentTurn === myIdx;
-    if (!isMyTurn && !isHost) return;
-
-    room.activeCell  = { col, row };
-    room.answerShown = false;
+    room.activeCell      = { col, row };
+    room.answerShown     = false;
+    room.submittedAnswer = null;
     io.to(myRoom).emit('cellOpened', { col, row, playerIdx: room.currentTurn, state: roomState(myRoom) });
   });
 
-  // Host reveals the answer
+  // Active player submits their typed answer
+  socket.on('submitAnswer', ({ answer }) => {
+    const room = rooms[myRoom];
+    if (!room || !room.activeCell)      return;
+    if (room.currentTurn !== myIdx)     return; // only the active player
+    room.submittedAnswer = answer.trim() || '…';
+    io.to(myRoom).emit('answerSubmitted', { answer: room.submittedAnswer, state: roomState(myRoom) });
+  });
+
+  // Host reveals the correct answer
   socket.on('revealAnswer', () => {
     const room = rooms[myRoom];
     if (!room || !room.activeCell)      return;
@@ -136,10 +144,11 @@ io.on('connection', (socket) => {
 
     room.lastAction = { key, col, row, playerIdx: room.currentTurn, delta, prevTurn: room.currentTurn };
     room.players[room.currentTurn].score += delta;
-    room.usedCells[key] = true;
-    room.activeCell     = null;
-    room.answerShown    = false;
-    room.currentTurn    = (room.currentTurn + 1) % room.players.length;
+    room.usedCells[key]      = true;
+    room.activeCell          = null;
+    room.answerShown         = false;
+    room.submittedAnswer     = null;
+    room.currentTurn         = (room.currentTurn + 1) % room.players.length;
 
     if (Object.keys(room.usedCells).length >= TOTAL) {
       room.phase = 'finished';
@@ -156,11 +165,12 @@ io.on('connection', (socket) => {
     const { col, row } = room.activeCell;
     const key = `${col},${row}`;
 
-    room.lastAction  = { key, col, row, playerIdx: room.currentTurn, delta: 0, prevTurn: room.currentTurn };
-    room.usedCells[key] = true;
-    room.activeCell     = null;
-    room.answerShown    = false;
-    room.currentTurn    = (room.currentTurn + 1) % room.players.length;
+    room.lastAction      = { key, col, row, playerIdx: room.currentTurn, delta: 0, prevTurn: room.currentTurn };
+    room.usedCells[key]  = true;
+    room.activeCell      = null;
+    room.answerShown     = false;
+    room.submittedAnswer = null;
+    room.currentTurn     = (room.currentTurn + 1) % room.players.length;
 
     if (Object.keys(room.usedCells).length >= TOTAL) {
       room.phase = 'finished';
