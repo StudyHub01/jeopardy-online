@@ -131,7 +131,7 @@
     .game-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; padding-top: 14px; }
 
     /* ── BOARD ── */
-    .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; width: 100%; }
+    .board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; width: 100%; }
     .cat-header {
       background: linear-gradient(160deg, #162fc4, #0a1c9c); border: 3px solid #2a47d8;
       border-radius: 6px; padding: 14px 8px; text-align: center;
@@ -266,7 +266,7 @@
 <audio id="easterAudio" src="/easter.mp3" preload="auto"></audio>
 
 <!-- ══ HOME ══ -->
-<div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">JoJo · Physique · Geometry Dash · Culture G</div></div>
+<div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">JoJo · Physique · Geometry Dash · Football · Dragon Ball Super</div></div>
 
 <div id="homeScreen" class="screen active">
   <div class="home-box">
@@ -427,36 +427,48 @@
 /* ════════════════════════════════════════
    DATA
 ════════════════════════════════════════ */
-const CATEGORIES = ["JoJo's Bizarre Adventure", "Physique", "Geometry Dash", "Culture G"];
+const CATEGORIES = ["JoJo's Bizarre Adventure", "Physique", "Geometry Dash", "Football", "Dragon Ball Super"];
 const VALUES = [200, 400, 600, 800, 1000];
 const QA = [
+  // ── JOJO ──
   [
-    { q: "Le Stand de Jotaro Kujo, capable d'arrêter le temps",                           a: "Star Platinum" },
-    { q: "Ce grand vilain crie « MUDA MUDA MUDA ! » lors de ses attaques",                a: "DIO" },
-    { q: "Numéro de la partie de JoJo se déroulant en Italie avec Giorno Giovanna",       a: "Partie 5 — Vento Aureo" },
-    { q: "Le pouvoir absolu de Gold Experience Requiem",                                   a: "Ramener tout à zéro (Return to Zero)" },
-    { q: "Vrai nom du tueur en série antagoniste de la Partie 4",                         a: "Yoshikage Kira" },
+    { q: "Dans quelle ville japonaise se déroule la Partie 4 de JoJo's Bizarre Adventure ?",                 a: "Morioh" },
+    { q: "Quel est le Stand de Bruno Bucciarati, capable de créer des fermetures éclair sur n'importe quoi ?", a: "Sticky Fingers" },
+    { q: "Quel personnage possède le Stand 'Crazy Diamond', capable de réparer tout ce qu'il touche ?",      a: "Josuke Higashikata" },
+    { q: "Comment s'appelle l'alter ego secret de Diavolo, le grand villain de la Partie 5 ?",               a: "Doppio (Vinegar Doppio)" },
+    { q: "Quel est le Stand d'Enrico Pucci dans sa forme ultime, capable d'accélérer le temps à l'infini ?", a: "Made in Heaven" },
   ],
+  // ── PHYSIQUE ──
   [
-    { q: "Unité SI de la pression",                                                        a: "Le Pascal (Pa)" },
-    { q: "Valeur de l'accélération gravitationnelle g à la surface de la Terre",          a: "9,81 m/s²" },
-    { q: "Formule de l'énergie cinétique d'un objet de masse m et de vitesse v",          a: "Ec = ½ mv²" },
-    { q: "Ce physicien a formulé les lois du mouvement et de la gravitation universelle", a: "Isaac Newton" },
-    { q: "Vitesse de la lumière dans le vide",                                             a: "299 792 458 m/s ≈ 3×10⁸ m/s" },
+    { q: "Quelle loi fondamentale relie la tension U, la résistance R et l'intensité I d'un circuit électrique ?", a: "La loi d'Ohm : U = R × I" },
+    { q: "Quelle est l'unité de mesure de l'énergie dans le système international ?",                         a: "Le Joule (J)" },
+    { q: "Quelle est la formule de la deuxième loi de Newton reliant force, masse et accélération ?",        a: "F = m × a" },
+    { q: "Quel phénomène physique, impliquant la diffusion de la lumière par les molécules, explique la couleur bleue du ciel ?", a: "La diffusion de Rayleigh" },
+    { q: "Quelle est la valeur approchée de la constante de Planck, fondamentale en mécanique quantique ?",  a: "6,626 × 10⁻³⁴ J·s" },
   ],
+  // ── GEOMETRY DASH ──
   [
-    { q: "Nom du tout premier niveau officiel de Geometry Dash",                           a: "Stereo Madness" },
-    { q: "Vrai nom du créateur de Geometry Dash (pseudo : RobTop)",                       a: "Robert Topala" },
-    { q: "Nombre total de niveaux officiels dans Geometry Dash 2.2",                      a: "22 niveaux" },
-    { q: "Légendaire niveau communautaire créé par Riot & Knobbelboy, longtemps #1 Démon",a: "Bloodbath" },
-    { q: "Mode de jeu où le personnage laisse une traînée diagonale et glisse en angle",  a: "The Wave" },
+    { q: "Combien d'étoiles rapporte un niveau 'Easy Demon' dans Geometry Dash ?",                           a: "10 étoiles" },
+    { q: "Quelle mise à jour majeure a introduit le mode Platformer dans Geometry Dash ?",                   a: "La mise à jour 2.2" },
+    { q: "Quel est le nom du mode de jeu où le personnage se déplace en projetant des fils comme une araignée ?", a: "Le mode Spider" },
+    { q: "Quel est le nom du niveau extrême créé par Pennutoh, longtemps classé parmi les #1 Démons ?",     a: "Tartarus" },
+    { q: "Quel est le nom du créateur du légendaire niveau démon 'Sonic Wave' ?",                            a: "Cyclic" },
   ],
+  // ── FOOTBALL ──
   [
-    { q: "Capitale de l'Australie",                                                        a: "Canberra" },
-    { q: "Année de la Révolution française",                                               a: "1789" },
-    { q: "Plus grande planète du système solaire",                                         a: "Jupiter" },
-    { q: "Auteur du roman « Crime et Châtiment »",                                        a: "Fiodor Dostoïevski" },
-    { q: "Formule chimique du sel de table (chlorure de sodium)",                         a: "NaCl" },
+    { q: "Combien de joueurs une équipe de football aligne-t-elle sur le terrain ?",                          a: "11 joueurs" },
+    { q: "Dans quel pays s'est déroulée la Coupe du Monde de football 2022 ?",                               a: "Le Qatar" },
+    { q: "Quel club détient le record du plus grand nombre de titres en Ligue des Champions ?",              a: "Le Real Madrid (15 titres)" },
+    { q: "Quel joueur détient le record absolu du plus grand nombre de Ballons d'Or remportés ?",            a: "Lionel Messi (8 Ballons d'Or)" },
+    { q: "En quelle année et contre quelle nation le Portugal a-t-il remporté son premier titre à l'Euro ?", a: "2016, contre la France (1-0 a.p.)" },
+  ],
+  // ── DRAGON BALL SUPER ──
+  [
+    { q: "Quel est le nom du dieu de la destruction de l'Univers 7 dans Dragon Ball Super ?",                a: "Beerus" },
+    { q: "Comment s'appelle l'ange guide et maître d'entraînement de Beerus dans Dragon Ball Super ?",      a: "Whis" },
+    { q: "Quel est le nom de la transformation divine de Goku combinant énergie Super Saiyan et énergie divine ?", a: "Super Saiyan Blue (SSGSS)" },
+    { q: "Dans l'arc 'Future Trunks', quel villain immortel fusionne avec son double du futur pour former 'Fused Zamasu' ?", a: "Zamasu" },
+    { q: "De quel univers Jiren, le combattant le plus puissant du Tournoi du Pouvoir, est-il le représentant ?", a: "L'Univers 11" },
   ],
 ];
 

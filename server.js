@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── Constants ──
 const VALUES = [200, 400, 600, 800, 1000];
 const COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899'];
-const N_CATS = 4;
+const N_CATS = 5;
 const N_VALS = 5;
 const TOTAL  = N_CATS * N_VALS;
 
