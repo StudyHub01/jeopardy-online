@@ -131,7 +131,7 @@
     .game-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; padding-top: 14px; }
 
     /* ── BOARD ── */
-    .board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; width: 100%; }
+    .board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; width: 100%; }
     .cat-header {
       background: linear-gradient(160deg, #162fc4, #0a1c9c); border: 3px solid #2a47d8;
       border-radius: 6px; padding: 14px 8px; text-align: center;
@@ -266,7 +266,7 @@
 <audio id="easterAudio" src="/easter.mp3" preload="auto"></audio>
 
 <!-- ══ HOME ══ -->
-<div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">JoJo · Physique · Geometry Dash · Football · Dragon Ball Super · Culture G</div></div>
+<div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">Histoire · Maths · Chimie · Religion · Biologie</div></div>
 
 <div id="homeScreen" class="screen active">
   <div class="home-box">
@@ -427,56 +427,48 @@
 /* ════════════════════════════════════════
    DATA
 ════════════════════════════════════════ */
-const CATEGORIES = ["JoJo's Bizarre Adventure", "Physique", "Geometry Dash", "Football", "Dragon Ball Super", "Culture G"];
+const CATEGORIES = ["Histoire", "Maths", "Chimie", "Religion", "Biologie"];
 const VALUES = [200, 400, 600, 800, 1000];
 const QA = [
-  // ── JOJO (plus difficile) ──
+  // ── HISTOIRE ──
   [
-    { q: "Quel est le nom du groupe de chasseurs de vampires dont fait partie William Antonio Zeppeli dans la Partie 1 ?", a: "Les Hamon Warriors / Utilisateurs du Hamon" },
-    { q: "Quel est le vrai nom de l'ability de Giorno Giovanna qui lui permet de donner la vie à des objets inanimés ?", a: "Gold Experience (Requiem dans sa forme ultime)" },
-    { q: "Dans la Partie 3, quel est le nom du Stand de l'ennemi J. Geil qui se déplace uniquement dans les reflets ?", a: "Hanged Man" },
-    { q: "Quelle est la capacité exacte de 'King Crimson' qui le différencie d'un simple arrêt du temps ?",            a: "Il efface le temps (les événements se produisent mais personne ne s'en souvient, sauf Diavolo)" },
-    { q: "Comment s'appelle le père biologique de Giorno Giovanna, et dans quelle Partie apparaît-il comme antagoniste principal ?", a: "DIO — Partie 3 (Stardust Crusaders)" },
+    { q: "En quelle année a débuté la Révolution française ?",                                                         a: "1789" },
+    { q: "Qui était le premier président des États-Unis d'Amérique ?",                                                 a: "George Washington" },
+    { q: "Quel empire antique a fait construire le Colisée de Rome au Ier siècle apr. J.-C. ?",                       a: "L'Empire romain" },
+    { q: "En quelle année s'est terminée la Première Guerre mondiale, et quel document a officialisé la fin des combats ?", a: "1918 — l'Armistice du 11 novembre" },
+    { q: "Quel dirigeant soviétique a lancé les réformes de 'Glasnost' et de 'Perestroïka' dans les années 1980 ?",   a: "Mikhaïl Gorbatchev" },
   ],
-  // ── PHYSIQUE ──
+  // ── MATHS ──
   [
-    { q: "Quelle est l'unité SI de la fréquence, et à combien de cycles par seconde correspond-elle ?",               a: "Le Hertz (Hz) — 1 Hz = 1 cycle/seconde" },
-    { q: "Quelle quantité est conservée lors d'une collision parfaitement élastique, en plus de l'énergie cinétique ?", a: "La quantité de mouvement (p = mv)" },
-    { q: "Quel principe d'Heisenberg stipule qu'on ne peut pas connaître simultanément et précisément position et vitesse d'une particule ?", a: "Le principe d'incertitude de Heisenberg" },
-    { q: "Quelle est la valeur numérique de la constante d'Avogadro (nombre de particules dans une mole) ?",          a: "6,022 × 10²³ mol⁻¹" },
-    { q: "Selon le modèle standard de la physique des particules, combien de saveurs de quarks existe-t-il ?",        a: "6 (up, down, charm, strange, top, bottom)" },
+    { q: "Combien font 13 × 13 ?",                                                                                     a: "169" },
+    { q: "Quelle est la valeur de π arrondie au centième ?",                                                           a: "3,14" },
+    { q: "Quelle est la dérivée de la fonction f(x) = x³ ?",                                                          a: "f'(x) = 3x²" },
+    { q: "Combien d'arêtes possède un dodécaèdre régulier (12 faces pentagonales) ?",                                  a: "30 arêtes" },
+    { q: "Quel est le plus petit nombre premier strictement supérieur à 100 ?",                                        a: "101" },
   ],
-  // ── GEOMETRY DASH ──
+  // ── CHIMIE ──
   [
-    { q: "Quel est le nom de la monnaie principale de Geometry Dash utilisée pour acheter des icônes dans la boutique ?", a: "Les orbes (Mana Orbs)" },
-    { q: "Comment s'appelle le coffre secret du menu principal de Geometry Dash, accessible en collectant des pièces ?", a: "The Vault (Le Coffre)" },
-    { q: "Quel est le nom du mode de difficulté maximal pour les niveaux créés par les joueurs ?",                    a: "Extreme Demon (Démon Extrême)" },
-    { q: "Quel joueur a été le premier à compléter 'Bloodbath' lors de sa sortie, et est aussi l'un de ses créateurs ?", a: "Riot" },
-    { q: "Quel est le pseudonyme du créateur roumain de Geometry Dash, connu sous le nom 'RobTop' ?",                a: "Robert Topala" },
+    { q: "Quel est le symbole chimique de l'or dans le tableau périodique ?",                                          a: "Au (Aurum)" },
+    { q: "Quelle est la formule chimique de l'eau ?",                                                                  a: "H₂O" },
+    { q: "Quel gaz représente environ 78 % de l'atmosphère terrestre ?",                                               a: "L'azote (N₂)" },
+    { q: "Quel est le numéro atomique du carbone dans le tableau périodique ?",                                        a: "6" },
+    { q: "Combien d'électrons peut contenir au maximum la troisième couche électronique (n = 3) ?",                    a: "18 électrons" },
   ],
-  // ── FOOTBALL ──
+  // ── RELIGION ──
   [
-    { q: "Combien de minutes dure un match de football en temps réglementaire ?",                                      a: "90 minutes (2 × 45)" },
-    { q: "Quel attaquant brésilien surnommé 'O Fenômeno' détient le record de buts en Coupes du Monde (15 buts) ?",  a: "Ronaldo Nazário (R9)" },
-    { q: "Quelle règle de football interdit à un attaquant d'être plus proche du but que l'avant-dernier défenseur au moment de la passe ?", a: "La règle du hors-jeu (offside)" },
-    { q: "Quel joueur allemand détient le record du plus grand nombre de buts inscrits sur l'ensemble de toutes les Coupes du Monde (16 buts) ?", a: "Miroslav Klose" },
-    { q: "Quel gardien légendaire, surnommé 'La Araña Negra', a remporté 3 Coupes du Monde avec l'Italie entre 1934 et 1938 ?", a: "Gianpiero Combi / Ricardo Zamora (Zamora est espagnol — bonne réponse : Gianpiero Combi)" },
+    { q: "Quelle est la ville sainte la plus importante de l'islam, lieu du pèlerinage annuel (Hajj) ?",               a: "La Mecque (Arabie Saoudite)" },
+    { q: "Combien de livres compte la Bible catholique, Ancien et Nouveau Testament confondus ?",                      a: "73 livres" },
+    { q: "Comment s'appelle le livre sacré de l'islam, considéré comme la parole directe d'Allah ?",                  a: "Le Coran (Al-Qur'an)" },
+    { q: "Quel prince indien a fondé le bouddhisme au Ve siècle av. J.-C. après avoir atteint l'Éveil ?",             a: "Siddhartha Gautama (le Bouddha)" },
+    { q: "Dans l'hindouisme, quelle déesse personnifie la puissance divine absolue et se manifeste notamment sous les formes de Durga et de Kali ?", a: "Shakti (Parvati / Durga / Kali)" },
   ],
-  // ── DRAGON BALL SUPER ──
+  // ── BIOLOGIE ──
   [
-    { q: "Comment s'appelle le Roi Absolu qui supervise l'ensemble des 12 univers dans Dragon Ball Super ?",           a: "Zeno-sama (Omni-King / Grand Zeno)" },
-    { q: "Quel concurrent de l'Univers 6, chef des Guerriers de la Justice, se transforme en 'Dieu de la Destruction' pendant le Tournoi du Pouvoir ?", a: "Toppo (Top)" },
-    { q: "Comment s'appelle la fusion entre Caulifla et Kale, les deux Saiyans femelles de l'Univers 6 ?",            a: "Kefla" },
-    { q: "Quel est le nom de la forme ultime que Goku maîtrise complètement lors du combat final contre Jiren, symbolisée par les pupilles argentées ?", a: "Ultra Instinct signe (Migatte no Goku'i — Mastered Ultra Instinct)" },
-    { q: "Quel est le nom de l'antagoniste principal de l'arc 'Broly' dans Dragon Ball Super, père biologique de Broly qui manipule ce dernier ?", a: "Paragus" },
-  ],
-  // ── CULTURE G ──
-  [
-    { q: "Quelle est la plus haute montagne du monde, et dans quel pays se trouve-t-elle ?",                           a: "Le Mont Everest (8 849 m) — Népal / Chine" },
-    { q: "En quelle année Neil Armstrong a-t-il posé le pied sur la Lune pour la première fois ?",                    a: "1969 (mission Apollo 11)" },
-    { q: "Quel écrivain irlandais, prix Nobel de littérature, est l'auteur de la pièce 'En attendant Godot' ?",      a: "Samuel Beckett" },
-    { q: "Quel est le pays le plus grand du monde en superficie, et quelle est cette superficie approximative ?",     a: "La Russie — environ 17,1 millions de km²" },
-    { q: "En quelle année a été signé le traité de Westphalie, mettant fin à la guerre de Trente Ans en Europe ?",   a: "1648" },
+    { q: "Comment s'appelle le processus par lequel les plantes produisent leur énergie à partir de la lumière solaire ?", a: "La photosynthèse" },
+    { q: "Combien de chromosomes possède une cellule humaine somatique (non sexuelle) normale ?",                      a: "46 chromosomes (23 paires)" },
+    { q: "Quel organe endocrine est responsable de la sécrétion d'insuline pour réguler la glycémie ?",               a: "Le pancréas" },
+    { q: "Quelle protéine contenue dans les globules rouges est chargée de transporter l'oxygène dans le sang ?",     a: "L'hémoglobine" },
+    { q: "Quelle enzyme est principalement responsable de la synthèse d'un nouveau brin d'ADN lors de la réplication cellulaire ?", a: "L'ADN polymérase" },
   ],
 ];
 
