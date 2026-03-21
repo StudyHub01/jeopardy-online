@@ -221,6 +221,21 @@ io.on('connection', (socket) => {
     io.to(myRoom).emit('playEasterEgg');
   });
 
+  // Host kicks a player
+  socket.on('kickPlayer', ({ targetIdx }) => {
+    const room = rooms[myRoom];
+    if (!room) return;
+    if (!room.players[myIdx]?.isHost) return;
+    if (targetIdx === myIdx) return;
+    if (targetIdx < 0 || targetIdx >= room.players.length) return;
+
+    const target = room.players[targetIdx];
+    if (!target) return;
+
+    // Notify kicked player — they will disconnect themselves
+    io.to(target.id).emit('kicked');
+  });
+
   socket.on('disconnect', () => {
     if (!myRoom || !rooms[myRoom]) return;
     const room = rooms[myRoom];

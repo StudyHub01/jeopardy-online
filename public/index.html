@@ -97,6 +97,21 @@
       color: #FFD700; padding: 2px 8px; border-radius: 10px;
     }
     .waiting-text { color: #adc4ff; font-size: .9rem; margin-bottom: 18px; opacity: .75; }
+    .kick-btn {
+      background: rgba(239,68,68,.18); border: 1px solid rgba(239,68,68,.45);
+      color: #ef4444; border-radius: 6px; padding: 3px 9px; font-size: .7rem;
+      cursor: pointer; font-family: 'Oswald', sans-serif; letter-spacing: 1px;
+      transition: background .15s; line-height: 1.4; flex-shrink: 0;
+    }
+    .kick-btn:hover { background: rgba(239,68,68,.42); }
+    .p-kick { position: absolute; top: 4px; right: 4px; padding: 1px 6px; font-size: .62rem; }
+    #kickedOverlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,20,.92); backdrop-filter: blur(8px);
+      z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; font-family: 'Oswald', sans-serif;
+    }
+    #kickedOverlay.open { display: flex; }
 
     /* ══ GAME SCREEN ══ */
     #gameScreen { max-width: 980px; }
@@ -264,6 +279,14 @@
 
 <canvas id="particleCanvas"></canvas>
 <audio id="easterAudio" src="/easter.mp3" preload="auto"></audio>
+
+<!-- Kicked overlay -->
+<div id="kickedOverlay">
+  <div style="font-size:3.5rem; margin-bottom:14px;">🚫</div>
+  <div style="font-size:2.2rem; color:#ef4444; letter-spacing:4px; margin-bottom:10px; text-shadow:0 0 20px rgba(239,68,68,.5);">EXPULSÉ</div>
+  <div style="color:rgba(255,255,255,.7); font-size:1rem; letter-spacing:1px;">Tu as été expulsé de la partie par l'hôte.</div>
+  <div style="color:rgba(255,255,255,.4); font-size:.85rem; margin-top:10px;">Retour à l'accueil dans 3 secondes…</div>
+</div>
 
 <!-- ══ HOME ══ -->
 <div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">Histoire · Maths · Chimie · Religion · Biologie</div></div>
@@ -569,7 +592,8 @@ function renderLobby(state) {
     div.innerHTML = `<div class="lobby-dot" style="background:${p.color}"></div>
       <span class="p-name">${p.name}</span>
       ${p.isHost ? '<span class="p-badge">HOST</span>' : ''}
-      ${i === myIdx ? '<span class="p-badge" style="background:rgba(255,255,255,.1);color:white">Toi</span>' : ''}`;
+      ${i === myIdx ? '<span class="p-badge" style="background:rgba(255,255,255,.1);color:white">Toi</span>' : ''}
+      ${amHost && !p.isHost ? `<button class="kick-btn" onclick="kickPlayer(${i})">✕ Kick</button>` : ''}`;
     container.appendChild(div);
   });
 }
@@ -599,7 +623,8 @@ function renderGame(state) {
       <div class="p-turn-badge">🎯 À jouer</div>
       <div class="p-name">${p.name}${i===myIdx?' (toi)':''}</div>
       <div class="p-score">${p.score} $</div>
-      <div class="p-color-bar" style="background:${p.color}"></div>`;
+      <div class="p-color-bar" style="background:${p.color}"></div>
+      ${amHost && i !== myIdx ? `<button class="kick-btn p-kick" onclick="kickPlayer(${i})" title="Expulser">✕</button>` : ''}`;
     bar.appendChild(card);
   });
 
@@ -762,6 +787,10 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => keysDown.delete(e.key.toLowerCase()));
 
 // Host actions
+function kickPlayer(targetIdx) {
+  socket.emit('kickPlayer', { targetIdx });
+}
+
 function doReveal() { socket.emit('revealAnswer'); }
 function doScore(sign) {
   if (!openCell) return;
@@ -877,6 +906,12 @@ socket.on('playEasterEgg', () => {
   const audio = document.getElementById('easterAudio');
   audio.currentTime = 0;
   audio.play().catch(() => {});
+});
+
+socket.on('kicked', () => {
+  document.getElementById('kickedOverlay').classList.add('open');
+  socket.disconnect();
+  setTimeout(() => location.reload(), 3000);
 });
 
 // Score popup on state update (detect score change)
