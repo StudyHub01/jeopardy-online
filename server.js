@@ -42,7 +42,7 @@ function roomState(code) {
   if (!r) return null;
   return {
     code,
-    players:         r.players.map(p => ({ name: p.name, color: p.color, score: p.score, isHost: p.isHost })),
+    players:         r.players.map(p => ({ name: p.name, color: p.color, score: p.score, isHost: p.isHost, disconnected: p.disconnected || false })),
     usedCells:       r.usedCells,
     currentTurn:     r.currentTurn,
     hasUndo:         !!r.lastAction,
@@ -54,7 +54,36 @@ function roomState(code) {
   };
 }
 
-// ── Helpers: apply score / skip ──
+// ── Helpers ──
+function nextActiveTurn(room, fromIdx) {
+  const n = room.players.length;
+  const active = room.players.filter(p => !p.disconnected);
+  if (active.length === 0) return fromIdx;
+  let next = (fromIdx + 1) % n;
+  let count = 0;
+  while (room.players[next]?.disconnected && count < n) {
+    next = (next + 1) % n;
+    count++;
+  }
+  return next;
+}
+
+function removePlayer(room, code, idx) {
+  room.players[idx].disconnected = true;
+  // If it was their turn and a cell was active, cancel it
+  if (room.currentTurn === idx && room.activeCell) {
+    room.activeCell      = null;
+    room.answerShown     = false;
+    room.submittedAnswer = null;
+    room.votes           = {};
+  }
+  // Advance turn if it was this player's turn
+  if (room.currentTurn === idx) {
+    room.currentTurn = nextActiveTurn(room, idx);
+  }
+  io.to(code).emit('state', roomState(code));
+}
+
 function applyScore(room, code, sign) {
   const { col, row } = room.activeCell;
   const key   = `${col},${row}`;
@@ -68,7 +97,7 @@ function applyScore(room, code, sign) {
   room.answerShown     = false;
   room.submittedAnswer = null;
   room.votes           = {};
-  room.currentTurn     = (room.currentTurn + 1) % room.players.length;
+  room.currentTurn     = nextActiveTurn(room, room.currentTurn);
 
   if (Object.keys(room.usedCells).length >= TOTAL) room.phase = 'finished';
   io.to(code).emit('state', roomState(code));
@@ -84,7 +113,7 @@ function applySkip(room, code) {
   room.answerShown     = false;
   room.submittedAnswer = null;
   room.votes           = {};
-  room.currentTurn     = (room.currentTurn + 1) % room.players.length;
+  room.currentTurn     = nextActiveTurn(room, room.currentTurn);
 
   if (Object.keys(room.usedCells).length >= TOTAL) room.phase = 'finished';
   io.to(code).emit('state', roomState(code));
@@ -169,7 +198,7 @@ io.on('connection', (socket) => {
     if (!room || !room.activeCell || !room.answerShown) return;
     room.votes[myIdx] = vote; // 'good' | 'bad'
 
-    const total    = room.players.length;
+    const total    = room.players.filter(p => !p.disconnected).length;
     const votesCast = Object.keys(room.votes).length;
     const good     = Object.values(room.votes).filter(v => v === 'good').length;
     const bad      = Object.values(room.votes).filter(v => v === 'bad').length;
@@ -232,16 +261,18 @@ io.on('connection', (socket) => {
     const target = room.players[targetIdx];
     if (!target) return;
 
-    // Notify kicked player — they will disconnect themselves
+    // Remove from game immediately, then notify (they'll disconnect)
+    removePlayer(room, myRoom, targetIdx);
     io.to(target.id).emit('kicked');
   });
 
   socket.on('disconnect', () => {
     if (!myRoom || !rooms[myRoom]) return;
     const room = rooms[myRoom];
-    if (myIdx >= 0 && room.players[myIdx]) room.players[myIdx].name += ' ✕';
-    io.to(myRoom).emit('state', roomState(myRoom));
-    if (room.players.every(p => p.name.endsWith(' ✕'))) delete rooms[myRoom];
+    if (myIdx >= 0 && room.players[myIdx] && !room.players[myIdx].disconnected) {
+      removePlayer(room, myRoom, myIdx);
+    }
+    if (room.players.every(p => p.disconnected)) delete rooms[myRoom];
   });
 });
 
