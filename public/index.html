@@ -289,7 +289,7 @@
 </div>
 
 <!-- ══ HOME ══ -->
-<div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">Histoire · Maths · Chimie · Religion · Biologie</div></div>
+<div class="title-wrap"><h1>JEOPARDY!</h1><div class="subtitle">Minecraft · Geometry Dash · JoJo · Football · Culture G</div></div>
 
 <div id="homeScreen" class="screen active">
   <div class="home-box">
@@ -450,48 +450,48 @@
 /* ════════════════════════════════════════
    DATA
 ════════════════════════════════════════ */
-const CATEGORIES = ["Histoire", "Maths", "Chimie", "Religion", "Biologie"];
+const CATEGORIES = ["Minecraft", "Geometry Dash", "JoJo", "Football", "Culture G"];
 const VALUES = [200, 400, 600, 800, 1000];
 const QA = [
-  // ── HISTOIRE ──
+  // ── MINECRAFT ──
   [
-    { q: "En quelle année a débuté la Révolution française ?",                                                         a: "1789" },
-    { q: "Qui était le premier président des États-Unis d'Amérique ?",                                                 a: "George Washington" },
-    { q: "Quel empire antique a fait construire le Colisée de Rome au Ier siècle apr. J.-C. ?",                       a: "L'Empire romain" },
-    { q: "En quelle année s'est terminée la Première Guerre mondiale, et quel document a officialisé la fin des combats ?", a: "1918 — l'Armistice du 11 novembre" },
-    { q: "Quel dirigeant soviétique a lancé les réformes de 'Glasnost' et de 'Perestroïka' dans les années 1980 ?",   a: "Mikhaïl Gorbatchev" },
+    { q: "Quel matériau de base faut-il obtenir en premier pour fabriquer une table de craft dans Minecraft ?",        a: "Du bois (n'importe quel type de bûche)" },
+    { q: "Combien de diamants sont nécessaires pour fabriquer une armure complète en diamant ?",                       a: "24 diamants" },
+    { q: "Comment s'appelle la dimension alternative accessible via un portail en obsidienne enflammée ?",             a: "Le Nether" },
+    { q: "Quel boss invoqué à l'aide de 4 têtes de Wither et de blocs d'âme de sable explose au moment de son apparition ?", a: "Le Wither" },
+    { q: "Comment s'appelle la structure générée dans la dimension de l'End, suspendue dans le vide, accessible via un vaisseau de l'End et contenant l'Élytre ?", a: "La Cité de l'End (End City)" },
   ],
-  // ── MATHS ──
+  // ── GEOMETRY DASH ──
   [
-    { q: "Combien font 13 × 13 ?",                                                                                     a: "169" },
-    { q: "Quelle est la valeur de π arrondie au centième ?",                                                           a: "3,14" },
-    { q: "Quelle est la dérivée de la fonction f(x) = x³ ?",                                                          a: "f'(x) = 3x²" },
-    { q: "Combien d'arêtes possède un dodécaèdre régulier (12 faces pentagonales) ?",                                  a: "30 arêtes" },
-    { q: "Quel est le plus petit nombre premier strictement supérieur à 100 ?",                                        a: "101" },
+    { q: "Quel est le nom du dernier niveau officiel du jeu de base de Geometry Dash, avec une difficulté 'Harder' ?", a: "Deadlocked" },
+    { q: "Quel est le nom de la monnaie principale de Geometry Dash utilisée pour acheter des icônes dans la boutique ?", a: "Les orbes (Mana Orbs)" },
+    { q: "Comment s'appelle le coffre secret accessible depuis le menu principal en collectant des pièces ?",           a: "The Vault (Le Coffre)" },
+    { q: "Quel niveau de la communauté, créé par Riot et d'autres, est généralement cité comme le premier 'Extreme Demon' historique à avoir été complété en direct ?", a: "Bloodbath" },
+    { q: "Quel est le pseudonyme du développeur roumain de Geometry Dash, dont le vrai nom est Robert Topala ?",      a: "RobTop" },
   ],
-  // ── CHIMIE ──
+  // ── JOJO ──
   [
-    { q: "Quel est le symbole chimique de l'or dans le tableau périodique ?",                                          a: "Au (Aurum)" },
-    { q: "Quelle est la formule chimique de l'eau ?",                                                                  a: "H₂O" },
-    { q: "Quel gaz représente environ 78 % de l'atmosphère terrestre ?",                                               a: "L'azote (N₂)" },
-    { q: "Quel est le numéro atomique du carbone dans le tableau périodique ?",                                        a: "6" },
-    { q: "Combien d'électrons peut contenir au maximum la troisième couche électronique (n = 3) ?",                    a: "18 électrons" },
+    { q: "Dans quelle Partie apparaît le Stand 'Star Platinum', et quel est le nom de son utilisateur ?",              a: "Partie 3 (Stardust Crusaders) — Jotaro Kujo" },
+    { q: "Comment s'appelle la technique de combat basée sur la maîtrise du souffle utilisée par les Zeppeli dans les Parties 1 et 2 ?", a: "Le Hamon (l'Onde)" },
+    { q: "Dans la Partie 3, quel est le Stand de J. Geil qui se déplace exclusivement dans les reflets et les surfaces réfléchissantes ?", a: "Hanged Man" },
+    { q: "Quelle est la capacité exacte de 'King Crimson' qui le distingue d'un simple arrêt du temps ?",             a: "Il efface le temps — les événements se produisent mais personne ne s'en souvient, sauf Diavolo" },
+    { q: "Dans la Partie 4, quel Stand appartient à Josuke Higashikata et possède la capacité de réparer et restaurer n'importe quoi, sauf lui-même ?", a: "Crazy Diamond" },
   ],
-  // ── RELIGION ──
+  // ── FOOTBALL ──
   [
-    { q: "Quelle est la ville sainte la plus importante de l'islam, lieu du pèlerinage annuel (Hajj) ?",               a: "La Mecque (Arabie Saoudite)" },
-    { q: "Combien de livres compte la Bible catholique, Ancien et Nouveau Testament confondus ?",                      a: "73 livres" },
-    { q: "Comment s'appelle le livre sacré de l'islam, considéré comme la parole directe d'Allah ?",                  a: "Le Coran (Al-Qur'an)" },
-    { q: "Quel prince indien a fondé le bouddhisme au Ve siècle av. J.-C. après avoir atteint l'Éveil ?",             a: "Siddhartha Gautama (le Bouddha)" },
-    { q: "Dans l'hindouisme, quelle déesse personnifie la puissance divine absolue et se manifeste notamment sous les formes de Durga et de Kali ?", a: "Shakti (Parvati / Durga / Kali)" },
+    { q: "Combien de joueurs composent une équipe de football sur le terrain en même temps ?",                         a: "11 joueurs" },
+    { q: "Quel pays a remporté la Coupe du Monde 2018 disputée en Russie ?",                                          a: "La France" },
+    { q: "Quelle règle interdit à un attaquant d'être plus proche du but adverse que l'avant-dernier défenseur au moment où la passe est jouée ?", a: "La règle du hors-jeu (offside)" },
+    { q: "Quel joueur allemand détient le record absolu de buts marqués en Coupe du Monde toutes éditions confondues ?", a: "Miroslav Klose (16 buts)" },
+    { q: "Quel gardien espagnol légendaire du début du XXe siècle a donné son nom à un trophée remis chaque année au meilleur gardien du championnat espagnol ?", a: "Ricardo Zamora (Trophée Zamora)" },
   ],
-  // ── BIOLOGIE ──
+  // ── CULTURE G ──
   [
-    { q: "Comment s'appelle le processus par lequel les plantes produisent leur énergie à partir de la lumière solaire ?", a: "La photosynthèse" },
-    { q: "Combien de chromosomes possède une cellule humaine somatique (non sexuelle) normale ?",                      a: "46 chromosomes (23 paires)" },
-    { q: "Quel organe endocrine est responsable de la sécrétion d'insuline pour réguler la glycémie ?",               a: "Le pancréas" },
-    { q: "Quelle protéine contenue dans les globules rouges est chargée de transporter l'oxygène dans le sang ?",     a: "L'hémoglobine" },
-    { q: "Quelle enzyme est principalement responsable de la synthèse d'un nouveau brin d'ADN lors de la réplication cellulaire ?", a: "L'ADN polymérase" },
+    { q: "Quelle est la capitale de l'Australie ? (attention, ce n'est pas Sydney)",                                   a: "Canberra" },
+    { q: "En quelle année s'est produite la chute du mur de Berlin ?",                                                a: "1989" },
+    { q: "Quel écrivain français du XIXe siècle est l'auteur des 'Misérables' et de 'Notre-Dame de Paris' ?",        a: "Victor Hugo" },
+    { q: "Quel est le symbole chimique du mercure dans le tableau périodique des éléments ?",                         a: "Hg (Hydrargyrum)" },
+    { q: "En quelle année l'ONU a-t-elle été fondée, et dans quelle ville se situe son siège principal ?",            a: "1945 — New York" },
   ],
 ];
 
